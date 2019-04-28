@@ -1,17 +1,19 @@
 from Tkinter import *
 from ttk import *
 import os
+from time import sleep
 from random import randint
 
 #############################################################################################################################################################################################################
 # noinspection PyUnreachableCode
 class GUITest(Frame):
-    #initialization asks for the directory to open (we want to open on the shared drive)
+	#initialization asks for the directory to open (we want to open on the shared drive)
 	def __init__ (self, parent, start):
 		Frame.__init__(self, parent)
 		#set the directory to the inital one just given
 		self.changeDir(start)
-		self.grid(sticky=N+E+W+S)
+		#self.grid(sticky=N+E+W+S)
+		self.parent = parent
 
 	#getter and setter for curDirectory
 	@property
@@ -22,19 +24,45 @@ class GUITest(Frame):
 		self._curDirectory = location
 
 	def setupGUI(self):
-		s = Scrollbar()
-		self.Tree = Treeview()
+
+		#setup different frames for different parts of the windowframe to hold
+		#main frame to hold everything
+		#change rowspan and columnspan to adapt to more widgets
+		self.mainFrame = Frame(self.parent)
+		self.mainFrame.grid(row = 0, rowspan = 2, column = 0, columnspan = 1, sticky = "nsew")
+		#configure the main grid
+		self.mainFrame.grid_rowconfigure(0, weight = 1)
+		self.mainFrame.grid_columnconfigure(0, weight = 1)
+
+		#frame to hold the tree
+		self.treeFrame = Frame(self.mainFrame)
+		self.treeFrame.grid(row = 0, column =0, columnspan = 3, sticky = "nsew")
+		self.treeFrame.grid_rowconfigure(0, weight = 1)
+		self.treeFrame.grid_columnconfigure(1, weight = 2)
+		self.treeFrame.grid_columnconfigure(2, weight = 1)
+
+		#frame to hold the progressbar and its labels
+		self.barFrame = Frame(self.mainFrame)
+		self.barFrame.grid(row = 1, column = 0, columnspan = 3, sticky = "nsew")
+		self.barFrame.grid_columnconfigure(0, weight=1)
+		self.barFrame.grid_columnconfigure(1, weight=2)
+		self.barFrame.grid_columnconfigure(2, weight=1)
+
+		#reconfigure the main grid to adjust to the new rows and columns being used
+		self.mainFrame.grid_rowconfigure(0, weight = 2)
+		self.mainFrame.grid_columnconfigure(0, weight = 1)
+		self.mainFrame.grid_columnconfigure(1, weight = 2)
+		self.mainFrame.grid_columnconfigure(2, weight = 1)
+
+		#create the scroll bar
+		s = Scrollbar(self.treeFrame)
+		#create the hiearchy tree
+		self.Tree = Treeview(self.treeFrame)
 
 		#set the tree to call to open a file when double clicked
 		self.Tree.bind("<Double-1>", self.dubClick)
 		# set the button to call to open the command options when right clicked
 		self.Tree.bind("<Button-3>", self.functions_config)
-
-		##position all of the widgets in a grid
-		self.Tree.grid(row = 0, column = 0, sticky = N+E+W)
-		#position the scroll bar
-		s.grid(row = 0, column = 1)
-		#position the loadbar
 
 		#make the tree have the scroll bar
 		s.config(command=self.Tree.yview)
@@ -47,15 +75,14 @@ class GUITest(Frame):
 		self.loadBar()
 
 		# load the refresh button
-		self.loadRefresh()
+		#self.loadRefresh()
 
-		#setup progress bar
-		self.pbar_det.grid(row = 2, column = 0, sticky = E+W+S)
-		self.lab_det_used.grid(row = 2, column = 1, sticky = E+W+S)
-		self.lab_det_max.grid(row = 2, column = 2, sticky = E+W+S)
-
-		#print the grid size
-		print self.Tree.grid_size()
+		#setup all widgets in the grid
+		self.Tree.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
+		s.grid(row = 0, column = 0, sticky = "nsew")
+		self.pbar_det.grid(row = 1, column = 1, sticky = "nsew")
+		self.lab_det_used.grid(row =1,column = 0, sticky = "nsew")
+		self.lab_det_max.grid(row = 1, column = 2, sticky = "nsew")
 
 	#list all files from a directory into an array
 	def changeDir (self, dir):
@@ -183,14 +210,14 @@ class GUITest(Frame):
 		self.var_det.set(pathused)
 
 		# sets up the progress bar for the storage and the physical values of the max and used
-		self.pbar_det = Progressbar(self, orient="horizontal", length=500, mode="determinate", variable=self.var_det,\
+		self.pbar_det = Progressbar(self.barFrame, orient=HORIZONTAL, length = 100, mode="determinate", variable=self.var_det,\
 									maximum=int(5))
-		self.lab_det_used = Label(self, text="Used: " + str(pathused) + " GB")
-		self.lab_det_max = Label(self, text="Max: 5")
-
+		#self.pbar_det.grid(row = 0)
+		self.lab_det_used = Label(self.barFrame, text="Used: " + str(pathused) + " GB")
+		self.lab_det_max = Label(self.barFrame, text="Max: 5")
 
 	def loadRefresh(self):
-		Button(self, text="REFRESH", command=lambda: self.setupGUI()).grid(row=randint(1,100), column=randint(1,100), sticky = N+E+W+S)
+		Button(self, text="REFRESH", command=lambda: self.setupGUI()).place(x = 400, y = 400, width = 50, height = 50)
 
 ##########################################################################################################################################################################################################
 # Main #
@@ -205,7 +232,7 @@ window.title("Pi Server Manager")
 #actually set the size of the window instead of just having pointless constants stated
 window.geometry(str(WIDTH)+"x"+str(HEIGHT))
 #create an instance of GUITest and feed it a default directory
-t=GUITest(window, "/home/ARGY/Documents")
+t=GUITest(window, "/home/ARGY/Pictures")
 #call to set up the GUI
 t.setupGUI()
 #wait for the window to be closed
