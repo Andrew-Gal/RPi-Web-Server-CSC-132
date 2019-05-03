@@ -28,30 +28,36 @@ class GUITest(Frame):
 		#main frame to hold everything
 		#change rowspan and columnspan to adapt to more widgets
 		self.mainFrame = Frame(self.parent)
-		self.mainFrame.grid(row = 0, rowspan = 2, column = 0, columnspan = 4, sticky = "nsew")
+		self.mainFrame.grid(row = 0, rowspan = 3, column = 0, columnspan = 4, sticky = "nsew")
 
 		#frame to hold the tree
 		self.treeFrame = Frame(self.mainFrame)
-		self.treeFrame.grid(row = 0, column =0, columnspan = 3, sticky = "nsew")
-		self.treeFrame.grid_rowconfigure(0, weight = 1)
+		self.treeFrame.grid(row = 1, column =0, columnspan = 4, sticky = "nsew")
+		self.treeFrame.grid_rowconfigure(1, weight = 1)
 		self.treeFrame.grid_columnconfigure(0, weight = 2)
 		self.treeFrame.grid_columnconfigure(1, weight = 1)
 
 		#frame to hold the progressbar and its labels
 		self.barFrame = Frame(self.mainFrame)
-		self.barFrame.grid(row = 1, column = 0, columnspan = 4, sticky = "nsew")
-		self.barFrame.grid_rowconfigure(1, weight = 1)
+		self.barFrame.grid(row = 2, column = 0, columnspan = 4, sticky = "nsew")
+		self.barFrame.grid_rowconfigure(2, weight = 1)
 		self.barFrame.grid_columnconfigure(0, weight = 1)
 		#make column 2 adjust the most
 		self.barFrame.grid_columnconfigure(1, weight = 2)
 		self.barFrame.grid_columnconfigure(2, weight = 1)
 		self.barFrame.grid_columnconfigure(3, weight = 1)
+		
+		#frame to hold the taskbar
+		self.taskbarFrame = Frame(self.mainFrame)
+		self.taskbarFrame.grid(row = 0, sticky = "nsew")
+		self.taskbarFrame.grid_rowconfigure(0, weight = 1)
 
 		#reconfigure the main grid to adjust to the new rows and columns being used
 		#use minsize to set the size of the rows and columns
 		#do so with proportions of WIDTH and HEIGHT to keep everything proportional
-		self.mainFrame.grid_rowconfigure(0, minsize = 19*HEIGHT/20)
-		self.mainFrame.grid_rowconfigure(1, minsize = HEIGHT/20)
+		self.mainFrame.grid_rowconfigure(0, minsize = HEIGHT/40)
+		self.mainFrame.grid_rowconfigure(1, minsize = 36*HEIGHT/40)
+		self.mainFrame.grid_rowconfigure(2, minsize = 3*HEIGHT/40)
 		self.mainFrame.grid_columnconfigure(1, minsize = WIDTH)
 
 		#create the scroll bar
@@ -191,6 +197,7 @@ class GUITest(Frame):
 		# self.menu.add_command(label="Select All", command=storeobj['SelectAll'])
 		# self.menu.add_separator()
 		# displays the pop up menu
+		
 		self.menu.tk_popup(event.x, event.y)
 		return
 
