@@ -1,8 +1,7 @@
 from Tkinter import *
 from ttk import *
 import os
-from time import sleep
-from random import randint
+import subprocess
 
 #############################################################################################################################################################################################################
 # noinspection PyUnreachableCode
@@ -93,11 +92,15 @@ class GUITest(Frame):
 		self._dirFiles = sorted(os.listdir(self._curDirectory))
 		#empty the directory count array
 		self.dirCon = []
+		#empty the id array
+		self.ids = []
 		
 	#function to open a file from its default program
+	##need to fix to work with spaces in file/folder names
 	def openFile (self, file):
 		try:
-			os.startfile(file)
+			#subprocess calls to open the file
+			subprocess.call(("xdg-open", file))
 		except:
 			#notify if the file wasn't able to be opened
 			print "file not found"
@@ -119,12 +122,15 @@ class GUITest(Frame):
 		self.openFile(file)
 		
 	#place all of the current directory into a hiearchy tree
-	def loadTree (self, path, id = "start", spot = 0):
+	def loadTree (self, path, id = "", spot = 0):
 		#if the id is "start" then there is no tree yet so dont feed calls the id
 		#if no spot is provided then it is first start, so now spot counts to keep an item tag equal to an index to link to its directory path
 		
 		#add the current directory path to the array so it can be found later
 		self.dirCon.append(path)
+		
+		#add the id to the array
+		self.ids.append(id)
 		
 		#iset files array for the given path
 		files = sorted(os.listdir(path))
@@ -142,20 +148,12 @@ class GUITest(Frame):
 			#if it is a file just add it to the tree at the end of the hiearchy
 			if (file == True):
 				#handle case if it is the first level
-				if (id == "start"):
-					self.Tree.insert("", "end", text = files[i], tags = str(spot))
-				else:
-					self.Tree.insert(id, "end", text = files[i], tags = str(spot))
+				self.Tree.insert(id, "end", text = files[i], tags = str(spot))
 				##come through and add styling to it like picture and such
 			#if it is a folder add it to the tree and use recursion to start in that folder and work inside out
 			else:
-				#handle case if it is the first level
-				if (id == "start"):
-					newID = self.Tree.insert("", "end", text = files[i], tags = str(-1))
-					##add pictures and stuff
-				else:
-					newID = self.Tree.insert(id, "end", text = files[i], tags = str(-1))
-					##add pictures and such
+				newID = self.Tree.insert(id, "end", text = files[i], tags = str(-1))
+				##add pictures and such
 				#create the new path for the next iteration
 				newPath = path + "/" + files[i]
 				#feed the call the id of the folder to make it place it under it
@@ -181,10 +179,10 @@ class GUITest(Frame):
 			# create the file's address
 			file = direct + "/" + name
 
-			print file
-
-			#adds the open command to the menu for the current item
-			self.menu.add_command(label="Open", command=self.openFile(file))
+		#adds the open command to the menu for the current item
+		self.menu.add_command(label="Open", command=self.openFile(file))
+		#adds the create folder command
+		self.menu.add_command(label = "Create Folder", command = self.createFolder())
 
 		# initializes the label commands options after you right click
 		#self.menu.add_command(label="Create", command=storeobj['Cut'])
@@ -216,6 +214,56 @@ class GUITest(Frame):
 		#self.pbar_det.grid(row = 0)
 		self.lab_det_used = Label(self.barFrame, text="Used: " + str(pathused) + " GB")
 		self.lab_det_max = Label(self.barFrame, text="Max: 5")
+
+	def createFolder (self):
+		#create a temporary window
+		root = Tk()
+		# creating the buttons
+		button1 = Button(root, text = "Ok", command = lambda: root.quit())
+		button1.grid(row = 1, column = 1)
+		button2 = Button(root, text = \
+			"Cancel")  # specifies location and excutes what you want to say
+		button2.grid(row = 1, column = 0)
+		# entry label
+		e1 = Entry(root)
+		e1.grid(row = 0, column = 0, columnspan = 2)
+		
+		root.columnconfigure(0, weight = 1)
+		
+		root.mainloop()
+		
+		name = e1.get()
+		
+		#def namegrab ():
+		#	name.append(e1.get())
+		
+		####
+		#get the item which is currently selected
+		item = self.Tree.focus()
+		#get the directory address from it
+		folder = self.Tree.item(item)["tags"]
+		id = int(folder[0])
+		#ready the path
+		path = self.dirCon[id] + "/" + name
+		#get the id
+		id = self.ids[id]
+		
+		#create the new folder on the computer
+		try:
+			os.mkdir(path)
+		except OSError:
+			print "Failed to create folder"
+			
+		#add the folder to the tree
+		newID = self.Tree.insert(id, "end", text = name, tags = str(-1))
+		
+		#####################################################
+		################## FIX THIS SHIT ####################
+		#####################################################
+		
+		#append the directory to the directory array
+		self.dirCon.append(path)
+		self.ids.append(newID)
 
 ##########################################################################################################################################################################################################
 # Main #
