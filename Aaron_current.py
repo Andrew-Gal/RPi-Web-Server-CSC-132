@@ -28,7 +28,7 @@ class GUITest(Frame):
 		#main frame to hold everything
 		#change rowspan and columnspan to adapt to more widgets
 		self.mainFrame = Frame(self.parent)
-		self.mainFrame.grid(row = 0, rowspan = 3, column = 0, columnspan = 4, sticky = "nsew")
+		self.mainFrame.grid(row = 0, rowspan = 2, column = 0, columnspan = 4, sticky = "nsew")
 
 		#frame to hold the tree
 		self.treeFrame = Frame(self.mainFrame)
@@ -49,14 +49,14 @@ class GUITest(Frame):
 		
 		#frame to hold the taskbar
 		self.taskbarFrame = Frame(self.mainFrame)
-		self.taskbarFrame.grid(row = 0, sticky = "nsew")
+		self.taskbarFrame.grid(row = 0, column = 0, columnspan = 4, sticky = "nsew")
 		self.taskbarFrame.grid_rowconfigure(0, weight = 1)
 
 		#reconfigure the main grid to adjust to the new rows and columns being used
 		#use minsize to set the size of the rows and columns
 		#do so with proportions of WIDTH and HEIGHT to keep everything proportional
 		self.mainFrame.grid_rowconfigure(0, minsize = HEIGHT/40)
-		self.mainFrame.grid_rowconfigure(1, minsize = 36*HEIGHT/40)
+		self.mainFrame.grid_rowconfigure(1, minsize = 18*HEIGHT/20)
 		self.mainFrame.grid_rowconfigure(2, minsize = 3*HEIGHT/40)
 		self.mainFrame.grid_columnconfigure(1, minsize = WIDTH)
 
@@ -83,12 +83,12 @@ class GUITest(Frame):
 		self.loadBar()
 
 		#setup all widgets in the grid
-		self.Tree.grid(row = 0, column = 0, columnspan = 2, sticky = "nsew")
-		s.grid(row = 0, column = 2, sticky = "nsew")
-		self.pbar_det.grid(row = 1, column = 1, sticky = "nsew")
-		self.lab_det_used.grid(row =1,column = 0, sticky = "nsew")
-		self.lab_det_max.grid(row = 1, column = 2, sticky = "nsew")
-		rst.grid(row = 1, column = 3, sticky = "nsew")
+		self.Tree.grid(row = 1, column = 0, columnspan = 2, sticky = "nsew")
+		s.grid(row = 1, column = 2, sticky = "nsew")
+		self.pbar_det.grid(row = 2, column = 1, sticky = "nsew")
+		self.lab_det_used.grid(row =2,column = 0, sticky = "nsew")
+		self.lab_det_max.grid(row = 2, column = 2, sticky = "nsew")
+		rst.grid(row = 2, column = 3, sticky = "nsew")
 
 	#list all files from a directory into an array
 	def changeDir (self, dir):
@@ -167,7 +167,7 @@ class GUITest(Frame):
 
 	def functions_config(self, event):
 		# displays popup menu
-		self.menu = Menu()
+		self.menu = Menu(self.treeFrame, tearoff = 0)
 
 		##find the currently selected item
 		item = self.Tree.focus()
@@ -186,9 +186,9 @@ class GUITest(Frame):
 			file = direct + "/" + name
 
 		#adds the open command to the menu for the current item
-		self.menu.add_command(label="Open", command=self.openFile(file))
+		self.menu.add_command(label="Open", command= lambda: self.openFile(file))
 		#adds the create folder command
-		self.menu.add_command(label = "Create Folder", command = self.createFolder())
+		self.menu.add_command(label = "Create Folder", command = lambda: self.createFolder())
 
 		# initializes the label commands options after you right click
 		#self.menu.add_command(label="Create", command=storeobj['Cut'])
@@ -226,10 +226,9 @@ class GUITest(Frame):
 		#create a temporary window
 		root = Tk()
 		# creating the buttons
-		button1 = Button(root, text = "Ok", command = lambda: root.quit())
+		button1 = Button(root, text = "Ok", command = lambda: getName())
 		button1.grid(row = 1, column = 1)
-		button2 = Button(root, text = \
-			"Cancel")  # specifies location and excutes what you want to say
+		button2 = Button(root, text = "Cancel", command = lambda: root.quit())  # specifies location and excutes what you want to say
 		button2.grid(row = 1, column = 0)
 		# entry label
 		e1 = Entry(root)
@@ -239,38 +238,44 @@ class GUITest(Frame):
 		
 		root.mainloop()
 		
-		name = e1.get()
-		
-		#def namegrab ():
-		#	name.append(e1.get())
-		
-		####
-		#get the item which is currently selected
-		item = self.Tree.focus()
-		#get the directory address from it
-		folder = self.Tree.item(item)["tags"]
-		id = int(folder[0])
-		#ready the path
-		path = self.dirCon[id] + "/" + name
-		#get the id
-		id = self.ids[id]
-		
-		#create the new folder on the computer
-		try:
-			os.mkdir(path)
-		except OSError:
-			print "Failed to create folder"
+		def getName ():
 			
-		#add the folder to the tree
-		newID = self.Tree.insert(id, "end", text = name, tags = str(-1))
+			#get the name from the label
+			name = e1.get()
+			
+			#def namegrab ():
+			#name.append(e1.get())
+			
+			####
+			#get the item which is currently selected
+			item = self.Tree.focus()
+			#get the directory address from it
+			folder = self.Tree.item(item)["tags"]
+			id = int(folder[0])
+			#ready the path
+			path = self.dirCon[id] + "/" + name
+			#get the id
+			id = self.ids[id]
+			
+			#create the new folder on the computer
+			try:
+				os.mkdir(path)
+			except OSError:
+				print "Failed to create folder"
+				
+			#add the folder to the tree
+			newID = self.Tree.insert(id, "end", text = name, tags = str(-1))
 		
-		#####################################################
-		################## FIX THIS SHIT ####################
-		#####################################################
-		
-		#append the directory to the directory array
-		self.dirCon.append(path)
-		self.ids.append(newID)
+			#####################################################
+			################## FIX THIS SHIT ####################
+			#####################################################
+			
+			#append the directory to the directory array
+			self.dirCon.append(path)
+			self.ids.append(newID)
+			
+			#close the window
+			root.quit()
 
 ##########################################################################################################################################################################################################
 # Main #
