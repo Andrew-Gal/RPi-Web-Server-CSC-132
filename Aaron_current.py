@@ -2,6 +2,7 @@ from Tkinter import *
 from ttk import *
 import os
 import subprocess
+import shutil
 
 #############################################################################################################################################################################################################
 # noinspection PyUnreachableCode
@@ -49,8 +50,11 @@ class GUITest(Frame):
 		
 		#frame to hold the taskbar
 		self.taskbarFrame = Frame(self.mainFrame)
-		self.taskbarFrame.grid(row = 0, column = 0, columnspan = 4, sticky = "nsew")
+		self.taskbarFrame.grid(row = 0, column = 0, columnspan = 3, sticky = "nsew")
 		self.taskbarFrame.grid_rowconfigure(0, weight = 1)
+		self.taskbarFrame.grid_columnconfigure(0, minsize = WIDTH/10, weight = 0)
+		self.taskbarFrame.grid_columnconfigure(1, minsize = WIDTH / 10, weight = 0)
+		self.taskbarFrame.grid_columnconfigure(2, weight = 1)
 
 		#reconfigure the main grid to adjust to the new rows and columns being used
 		#use minsize to set the size of the rows and columns
@@ -81,6 +85,9 @@ class GUITest(Frame):
 
 		# load the storage bar
 		self.loadBar()
+		
+		#load the task bar
+		self.loadTask()
 
 		#setup all widgets in the grid
 		self.Tree.grid(row = 1, column = 0, columnspan = 2, sticky = "nsew")
@@ -89,6 +96,8 @@ class GUITest(Frame):
 		self.lab_det_used.grid(row =2,column = 0, sticky = "nsew")
 		self.lab_det_max.grid(row = 2, column = 2, sticky = "nsew")
 		rst.grid(row = 2, column = 3, sticky = "nsew")
+		self.File.grid(row = 0, column = 0, sticky = "nsew")
+		self.Edit.grid(row = 0, column = 1, stick = "nsew")
 
 	#list all files from a directory into an array
 	def changeDir (self, dir):
@@ -189,6 +198,18 @@ class GUITest(Frame):
 		self.menu.add_command(label="Open", command= lambda: self.openFile(file))
 		#adds the create folder command
 		self.menu.add_command(label = "Create Folder", command = lambda: self.createFolder())
+		#add the rename command to the list
+		self.menu.add_command(label = "Rename", command = lambda: self.rename(direct, file, item))
+		#add the delete command to the list
+		self.menu.add_command(label = "Delete", command = lambda: self.delete(direct, item))
+		
+		##########
+		# Needed #
+		##########
+		#1-copy
+		#2-cut
+		#3-paste
+		##further investigation proved working with the windows clipboard is rather frustrating
 
 		# initializes the label commands options after you right click
 		#self.menu.add_command(label="Create", command=storeobj['Cut'])
@@ -200,6 +221,65 @@ class GUITest(Frame):
 		
 		self.menu.tk_popup(event.x, event.y)
 		return
+	
+	#function to copy a file to a select location
+	def copyTo (self):
+		# general process of the getting the file and such
+		##find the currently selected item
+		item = self.Tree.focus()
+		
+		# get the file location from the selected item
+		folder = self.Tree.item(item)["tags"]
+		folder = folder[0]
+		
+		# if it is just a folder then do nothing with the name
+		if (folder != "-1"):
+			# get the file's names
+			name = self.Tree.item(item)["text"]
+			# get the directory location of the current file
+			direct = self.dirCon[int(folder)]
+			# create the file's address
+			file = direct + "/" + name
+			
+		#get the requested location to copy the file to
+		target = self.inputWindow()
+		
+		#try to copy it
+		try:
+			shutil.copy(file, target)
+		except OSError:
+			print "Error"
+		
+	#method to delete a file or folder and remove it from the tree
+	def delete (self, file, item):
+		#delete the item from the tree
+		
+		#if it is a folder it needs to delete everything inside of it
+	
+		self.Tree.delete(item)
+		
+		#delete the file or folder from the os
+		try:
+			os.remove(file)
+		except OSError:
+			shutil.rmtree(file)
+		
+	#method to renae a file
+	def rename (self, folder, file, item):
+		#ask for the new name
+		name = self.inputWindow()
+		
+		#change the name in the tree view
+		self.Tree.item(item, text = name)
+		
+		#change the name in the os file system
+		#first make the new directory
+		new = folder + "/" + name
+		#then change dat dang
+		try:
+			os.rename(file, new)
+		except OSError:
+			print "Error"
 
 	def loadBar(self):
 		self.var_det = IntVar(self)
@@ -221,30 +301,122 @@ class GUITest(Frame):
 		#self.pbar_det.grid(row = 0)
 		self.lab_det_used = Label(self.barFrame, text="Used: " + str(pathused) + " GB")
 		self.lab_det_max = Label(self.barFrame, text="Max: 5")
+		
+	#function to load up the taskbar at the top
+	def loadTask (self):
+		##File##
+		# make the menubutton
+		self.File = Menubutton(self.taskbarFrame, text = "File")
+		#create a menu to hold all of the options for File
+		self.File.menu = Menu(self.File, tearoff = 0)
+		#add all the commands
+		self.File.menu.add_command(label = "New Window", command = lambda: self.newWindow())
+		self.File.menu.add_command(label = "Change Folder", command = lambda: self.changeFolder())
+		self.File.menu.add_command(label = "Close", command = lambda: self.quit())
+		#set the menu to the menubutton
+		self.File["menu"] = self.File.menu
+		
+		##Edit##
+		# make the menubutton
+		self.Edit = Menubutton(self.taskbarFrame, text = "Edit")
+		# create a menu to hold all of the options for File
+		self.Edit.menu = Menu(self.Edit, tearoff = 0)
+		# add all the commands
+		self.Edit.menu.add_command(label = "Move To", command = lambda: self.moveTo())
+		self.Edit.menu.add_command(label = "Copy To", command = lambda: self.copyTo())
+		# set the menu to the menubutton
+		self.Edit["menu"] = self.Edit.menu
+		
+	#method to open a new window of this file browser
+	def newWindow (self):
+		#create the new window as a top level so that it appears above the currently selected
+		extra = Tk()
+		# set the window title
+		extra.title("Pi Server Manager")
+		# actually set the size of the window instead of just having pointless constants stated
+		extra.geometry(str(WIDTH) + "x" + str(HEIGHT))
+		# create an instance of GUITest and feed it a default directory
+		f = GUITest(extra, self._curDirectory)
+		# call to set up the GUI
+		f.setupGUI()
+		# wait for the window to be closed
+		extra.mainloop()
+	
+	#method to change the directory and refresh the tree
+	def changeFolder (self):
+		#get the new directory to go to
+		destination = self.inputWindow()
+		
+		#change the directory
+		self.changeDir(destination)
+		
+		#reset the window to reset the tree
+		self.setupGUI()
+		
+	#method to move a file or folder to a new directory
+	def moveTo (self):
+		# general process of the getting the file and such
+		##find the currently selected item
+		item = self.Tree.focus()
+		
+		# get the file location from the selected item
+		folder = self.Tree.item(item)["tags"]
+		folder = folder[0]
+		
+		# if it is just a folder then do nothing with the name
+		if (folder != "-1"):
+			# get the file's names
+			name = self.Tree.item(item)["text"]
+			# get the directory location of the current file
+			direct = self.dirCon[int(folder)]
+			# create the file's address
+			file = direct + "/" + name
+		
+		#get the target destination
+		target = self.inputWindow()
+		
+		#try to move the file or folder
+		try:
+			shutil.move(file, target)
+		except OSError:
+			print "Error"
+		
+	#function to create a window to ask for input and then returns the input
+	def inputWindow (self):
+		
+		# create an empty variable to hold the users message
+		text = None
 
-	def createFolder (self):
-		#create a temporary window
-		root = Tk()
-		# creating the buttons
-		button1 = Button(root, text = "Ok", command = lambda: getName())
-		button1.grid(row = 1, column = 1)
-		button2 = Button(root, text = "Cancel", command = lambda: root.quit())  # specifies location and excutes what you want to say
-		button2.grid(row = 1, column = 0)
+		# create a temporary window
+		root = Toplevel()
+		
 		# entry label
 		e1 = Entry(root)
 		e1.grid(row = 0, column = 0, columnspan = 2)
+		
+		# creating the buttons
+		button1 = Button(root, text = "Ok", command = lambda: root.quit())
+		button1.grid(row = 1, column = 1)
+		button2 = Button(root, text = "Cancel", command = lambda: root.destroy()) #destroys the window and stops the mainloop
+		button2.grid(row = 1, column = 0)
 		
 		root.columnconfigure(0, weight = 1)
 		
 		root.mainloop()
 		
-		def getName ():
+		text = e1.get()
+		
+		return text
+
+	def createFolder (self):
 			
-			#get the name from the label
-			name = e1.get()
-			
-			#def namegrab ():
-			#name.append(e1.get())
+		#get the name from the input window
+		name = self.inputWindow()
+		
+		#def namegrab ():
+		#name.append(e1.get())
+		
+		if (name != None):
 			
 			####
 			#get the item which is currently selected
@@ -262,10 +434,9 @@ class GUITest(Frame):
 				os.mkdir(path)
 			except OSError:
 				print "Failed to create folder"
-				
+			
 			#add the folder to the tree
 			newID = self.Tree.insert(id, "end", text = name, tags = str(-1))
-		
 			#####################################################
 			################## FIX THIS SHIT ####################
 			#####################################################
@@ -273,9 +444,6 @@ class GUITest(Frame):
 			#append the directory to the directory array
 			self.dirCon.append(path)
 			self.ids.append(newID)
-			
-			#close the window
-			root.quit()
 
 ##########################################################################################################################################################################################################
 # Main #
