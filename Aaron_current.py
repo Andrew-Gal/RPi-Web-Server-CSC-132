@@ -13,7 +13,6 @@ class GUITest(Frame):
 		Frame.__init__(self, parent)
 		#set the directory to the inital one just given
 		self.changeDir(start)
-		#self.grid(sticky=N+E+W+S)
 		self.parent = parent
 
 	#getter and setter for curDirectory
@@ -118,7 +117,6 @@ class GUITest(Frame):
 		self.items = []
 		
 	#function to open a file from its default program
-	##need to fix to work with spaces in file/folder names
 	def openFile (self, file):
 		try:
 			#subprocess calls to open the file
@@ -171,11 +169,9 @@ class GUITest(Frame):
 				identity = self.Tree.insert(id, "end", text = files[i], tags = str(spot))
 				#append identity to self.items
 				self.items.append(identity)
-				##come through and add styling to it like picture and such
 			#if it is a folder add it to the tree and use recursion to start in that folder and work inside out
 			else:
 				newID = self.Tree.insert(id, "end", text = files[i], tags = str(-1))
-				##add pictures and such
 				#append NewID to self.items (cause it is like that inclusive/exclusive stuff)
 				self.items.append(newID)
 				#create the new path for the next iteration
@@ -211,22 +207,6 @@ class GUITest(Frame):
 		self.menu.add_command(label = "Rename", command = lambda: self.rename(direct, file, item))
 		#add the delete command to the list
 		self.menu.add_command(label = "Delete", command = lambda: self.delete(direct, item))
-		
-		##########
-		# Needed #
-		##########
-		#1-copy
-		#2-cut
-		#3-paste
-		##further investigation proved working with the windows clipboard is rather frustrating
-
-		# initializes the label commands options after you right click
-		#self.menu.add_command(label="Create", command=storeobj['Cut'])
-		# self.menu.add_command(label="Paste", command=storeobj['Paste'])
-		# self.menu.add_separator()
-		# self.menu.add_command(label="Select All", command=storeobj['SelectAll'])
-		# self.menu.add_separator()
-		# displays the pop up menu
 		
 		self.menu.tk_popup(event.x, event.y)
 		return
@@ -273,7 +253,7 @@ class GUITest(Frame):
 		except OSError:
 			shutil.rmtree(file)
 		
-	#method to renae a file
+	#method to rename a file
 	def rename (self, folder, file, item):
 		#ask for the new name
 		name = self.inputWindow()
@@ -344,8 +324,6 @@ class GUITest(Frame):
 		
 	#method to search through the tree and hide all items without the key word/phrase
 	def search (self):
-		#OH NO, NO, No, NO
-		#must reattach folders
 		
 		#reenable all items before searching through them
 		
@@ -354,28 +332,9 @@ class GUITest(Frame):
 		#self.Tree = Treeview(self.treeFrame)
 		self.changeDir(self._curDirectory)
 		self.loadTree(self._curDirectory)
-		
-		# #loop through all items and make sure to turn them on
-		# if (len(self.off) > 0):
-		# 	print "got it"
-		# 	for m in self.items:
-		# 		if m in self.off:
-		# 			self.Tree.reattach(self.Tree.item(m))
-		
-		##restart the tree before sorting
-		#self.Tree = Treeview(self.treeFrame)
-		#self.changeDir(self._curDirectory)
-		#self.loadTree(self._curDirectory)
 			
 		#get the string from the search bar entry
 		key = self.searchBar.get()
-		
-		# #get an array of all the the children in the tree
-		# children = self.Tree.get_children()
-		#
-		# for l in self.ids:
-		# 	tempp = self.Tree.get_children(self.Tree.item(l))
-		# 	children = list(children) + list(tempp)
 		
 		#loop through all the items and detach any without key in their text
 		for n in self.items:
@@ -390,44 +349,6 @@ class GUITest(Frame):
 			if (len(self.Tree.get_children(self.ids[spottie])) == 0):
 				if not(key in self.Tree.item(self.ids[spottie])["text"]):
 					self.Tree.delete(self.ids[spottie])
-			
-		# for o in range(len(self.items)):
-		# 	if self.items[o] in self.ids:
-		# 		#next folder is the next one in self.ids
-		# 		#everything between is the first's files
-		# 		#variable to hold index of next folder
-		# 		nxt = None
-		# 		#loop and find the next folder
-		# 		for p in range(o, len(self.items)):
-		# 			if self.items[p] in self.ids:
-		# 				nxt = p
-		# 				break
-		# 		#if w is none then it is the last folder
-		# 		#set a variable to tell which spot to stop at
-		# 		if (nxt == None):
-		# 			spot = len(self.items)
-		# 		else:
-		# 			spot = nxt
-		#
-		# 		#boolean to hold if the folder had a live file or not
-		# 		hot = False
-		#
-		# 		#loop and find file thats are under this folder
-		# 		for q in range(o + 1, nxt):
-		# 			if (key in self.Tree.item(q)):
-		# 				hot = True
-		#
-		# 		#if hot is still False then the folder needs to be detached
-		# 		if (hot == False):
-		# 			#make sure that the file name doesn't have the key before detaching
-		# 			if not(key in self.Tree.item(self.items[o])["text"]):
-		# 				self.Tree.detach(self.items[o])
-		#
-		# 		#check to see if there are any files in the folder
-		# 		if ((nxt - o) == 1):
-		# 			if not(key in self.Tree.item(o)["text"]):
-		# 				self.Tree.delete(self.Tree.item(o))
-		
 		
 	#method to open a new window of this file browser
 	def newWindow (self):
@@ -515,9 +436,6 @@ class GUITest(Frame):
 		#get the name from the input window
 		name = self.inputWindow()
 		
-		#def namegrab ():
-		#name.append(e1.get())
-		
 		if (name != None):
 			
 			####
@@ -539,9 +457,6 @@ class GUITest(Frame):
 			
 			#add the folder to the tree
 			newID = self.Tree.insert(id, "end", text = name, tags = str(-1))
-			#####################################################
-			################## FIX THIS SHIT ####################
-			#####################################################
 			
 			#append the directory to the directory array
 			self.dirCon.append(path)
